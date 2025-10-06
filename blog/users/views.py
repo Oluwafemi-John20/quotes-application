@@ -4,6 +4,7 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from .serializers import UserRegisterSerializer
+from django.contrib.auth import authenticate
 
 
 class RegisterUserAPIView(APIView):
@@ -23,3 +24,14 @@ class RegisterUserAPIView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginUserAPIView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key})
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
